@@ -505,12 +505,25 @@ body {
 .items-section-header {
   font-size: 10px;
   font-weight: 700;
-  color: var(--text-dim);
   letter-spacing: 1px;
   text-transform: uppercase;
   padding: 6px 0 6px 2px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 6px;
+}
+
+.defensive-header { color: #5b8ac9; border-color: #1e3050; }
+.offensive-header  { color: #cc6644; border-color: #3a1e14; }
+
+.hero-note {
+  font-size: 10px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  padding: 6px 8px;
+  background: var(--bg-3);
+  border-radius: 4px;
+  border-left: 2px solid var(--gold-dim);
+  margin-bottom: 8px;
 }
 
 .items-list { display: flex; flex-direction: column; gap: 5px; }
