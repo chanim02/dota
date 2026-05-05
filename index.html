@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dota 2 Counter Picker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="loader"></div>
+  <p>Loading heroes...</p>
+</div>
+
+<div id="app" style="display:none">
+
+  <!-- Header -->
+  <header class="header">
+    <h1 class="title">DOTA 2 <span class="accent">COUNTER PICKER</span></h1>
+    <div class="header-right">
+      <span class="toggle-hint">TAB to switch</span>
+      <button id="team-toggle" class="team-toggle radiant">
+        Picking for <strong>RADIANT</strong>
+      </button>
+    </div>
+  </header>
+
+  <!-- Search & Filter -->
+  <div class="search-section">
+    <div class="search-wrapper">
+      <input type="text" id="search-input" placeholder="Search heroes... (press / to focus)" autocomplete="off">
+    </div>
+    <div class="attr-filters">
+      <button class="filter-btn active" data-attr="all">ALL</button>
+      <button class="filter-btn str" data-attr="str">STR</button>
+      <button class="filter-btn agi" data-attr="agi">AGI</button>
+      <button class="filter-btn int" data-attr="int">INT</button>
+      <button class="filter-btn uni" data-attr="all_attr">UNI</button>
+    </div>
+  </div>
+
+  <!-- Hero Grid -->
+  <div id="hero-grid" class="hero-grid"></div>
+
+  <!-- Teams -->
+  <div class="teams-container">
+    <div class="team-panel">
+      <div class="team-header">
+        <span class="team-badge radiant-badge">RADIANT</span>
+        <span class="team-count" id="radiant-count">0/5</span>
+      </div>
+      <div class="team-slots" id="radiant-slots"></div>
+    </div>
+
+    <div class="vs-divider">VS</div>
+
+    <div class="team-panel">
+      <div class="team-header">
+        <span class="team-badge dire-badge">DIRE</span>
+        <span class="team-count" id="dire-count">0/5</span>
+      </div>
+      <div class="team-slots" id="dire-slots"></div>
+    </div>
+  </div>
+
+  <!-- Analysis -->
+  <div class="analysis-container">
+
+    <div class="analysis-panel" id="counters-panel">
+      <h2 class="panel-title">BEST COUNTER PICKS <span class="panel-subtitle">vs Dire</span></h2>
+      <div id="counters-content" class="counters-content">
+        <p class="placeholder-text">Add heroes to the enemy team to see counters</p>
+      </div>
+    </div>
+
+    <div class="analysis-panel" id="items-panel">
+      <h2 class="panel-title">ITEM RECOMMENDATIONS</h2>
+      <div class="items-tabs">
+        <button class="item-tab active" data-tab="team">vs Enemy Team</button>
+        <button class="item-tab" data-tab="hero">vs Specific Hero</button>
+      </div>
+      <div id="items-content" class="items-content">
+        <p class="placeholder-text">Add heroes to the enemy team to see item recommendations</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
