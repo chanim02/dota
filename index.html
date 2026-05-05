@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dota 2 Counter Picker</title>
+  <title>Dota 2 Turbo Counter Picker</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,11 +17,11 @@
 
   <!-- Header -->
   <header class="header">
-    <h1 class="title">DOTA 2 <span class="accent">COUNTER PICKER</span></h1>
+    <h1 class="title">DOTA 2 <span class="accent">TURBO</span> COUNTER PICKER</h1>
     <div class="header-right">
       <span class="toggle-hint">TAB to switch</span>
       <button id="team-toggle" class="team-toggle radiant">
-        Picking for <strong>RADIANT</strong>
+        Picking for <strong>MY HERO</strong>
       </button>
     </div>
   </header>
@@ -45,10 +45,10 @@
 
   <!-- Teams -->
   <div class="teams-container">
-    <div class="team-panel">
+    <div class="team-panel my-hero-panel">
       <div class="team-header">
-        <span class="team-badge radiant-badge">RADIANT</span>
-        <span class="team-count" id="radiant-count">0/5</span>
+        <span class="team-badge radiant-badge">MY HERO</span>
+        <span class="team-count" id="radiant-count">0/1</span>
       </div>
       <div class="team-slots" id="radiant-slots"></div>
     </div>
@@ -57,7 +57,7 @@
 
     <div class="team-panel">
       <div class="team-header">
-        <span class="team-badge dire-badge">DIRE</span>
+        <span class="team-badge dire-badge">ENEMY</span>
         <span class="team-count" id="dire-count">0/5</span>
       </div>
       <div class="team-slots" id="dire-slots"></div>
@@ -68,7 +68,7 @@
   <div class="analysis-container">
 
     <div class="analysis-panel" id="counters-panel">
-      <h2 class="panel-title">BEST COUNTER PICKS <span class="panel-subtitle">vs Dire</span></h2>
+      <h2 class="panel-title">BEST COUNTER PICKS <span class="panel-subtitle">vs Enemy</span></h2>
       <div id="counters-content" class="counters-content">
         <p class="placeholder-text">Add heroes to the enemy team to see counters</p>
       </div>

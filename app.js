@@ -7,70 +7,74 @@ const CDN = 'https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react
 
 // =============================================
 // ITEM DATABASE  (img = CDN filename)
+// Priorities tuned for TURBO: cheap early-impact
+// items ranked higher, expensive late-game lower.
 // =============================================
 const ITEMS = {
   // ---- DEFENSIVE / UTILITY ----
-  black_king_bar:  { name: 'Black King Bar',     img: 'black_king_bar',    reason: 'Magic immunity — essential vs. stun/magic-heavy lineups', priority: 3 },
-  ghost:           { name: 'Ghost Scepter',       img: 'ghost',             reason: 'Untargetable by physical attacks — survive burst carries', priority: 3 },
-  heavens_halberd: { name: "Heaven's Halberd",    img: 'heavens_halberd',   reason: 'Disarms carry — stops physical attacks for 3-4s',          priority: 2 },
-  pipe:            { name: 'Pipe of Insight',     img: 'pipe',              reason: 'AOE magic barrier for team vs. magic burst',               priority: 2 },
-  hood_of_defiance:{ name: 'Hood of Defiance',   img: 'hood_of_defiance',  reason: 'Magic resistance — core vs. magic damage heroes',          priority: 2 },
-  eternal_shroud:  { name: 'Eternal Shroud',      img: 'eternal_shroud',    reason: 'High magic resist + converts damage to mana shield',       priority: 2 },
-  lotus_orb:       { name: 'Lotus Orb',           img: 'lotus_orb',         reason: 'Reflects single-target spells back at the caster',         priority: 2 },
-  sphere:          { name: "Linken's Sphere",      img: 'sphere',            reason: 'Blocks one targeted spell every 14s',                      priority: 2 },
-  blade_mail:      { name: 'Blade Mail',           img: 'blade_mail',        reason: 'Returns damage — punishes right-click carries',            priority: 2 },
-  crimson_guard:   { name: 'Crimson Guard',        img: 'crimson_guard',     reason: 'Blocks physical damage per hit — counters physical teams', priority: 1 },
-  force_staff:     { name: 'Force Staff',          img: 'force_staff',       reason: 'Reposition out of initiations / pull allies to safety',    priority: 2 },
-  aeon_disk:       { name: 'Aeon Disk',            img: 'aeon_disk',         reason: 'Saves from burst kill — vs. high nuke/AOE teams',          priority: 2 },
-  cyclone:         { name: "Eul's Scepter",        img: 'cyclone',           reason: 'Dispels debuffs + interrupts channeling spells',           priority: 1 },
-  glimmer_cape:    { name: 'Glimmer Cape',         img: 'glimmer_cape',      reason: 'Invisibility + magic resistance mid-fight for self/ally',  priority: 1 },
-  hurricane_pike:  { name: 'Hurricane Pike',       img: 'hurricane_pike',    reason: 'Push away melee heroes + grants bonus range attack',       priority: 2 },
+  // Cheap & high impact in turbo (under ~2500g) → priority 3
+  ghost:           { name: 'Ghost Scepter',        img: 'ghost',             reason: 'Only 1500g — instant physical immunity, huge early value in turbo', priority: 3 },
+  glimmer_cape:    { name: 'Glimmer Cape',         img: 'glimmer_cape',      reason: '1850g — invisible + magic resist mid-fight, cheap teamfight tool',  priority: 3 },
+  blade_mail:      { name: 'Blade Mail',           img: 'blade_mail',        reason: '2100g — returns damage early when enemy carry is not yet tanky',     priority: 3 },
+  force_staff:     { name: 'Force Staff',          img: 'force_staff',       reason: '2200g — cheap reposition out of initiations, core utility in turbo', priority: 3 },
+  hood_of_defiance:{ name: 'Hood of Defiance',    img: 'hood_of_defiance',  reason: '2250g — best early magic resist item, core vs any magic lineup',     priority: 3 },
+  eternal_shroud:  { name: 'Eternal Shroud',       img: 'eternal_shroud',    reason: '2750g — magic resist + mana barrier, great value for int heroes',    priority: 3 },
+  aeon_disk:       { name: 'Aeon Disk',            img: 'aeon_disk',         reason: '3000g — saves from burst combos, very relevant in short turbo fights',priority: 2 },
+  crimson_guard:   { name: 'Crimson Guard',        img: 'crimson_guard',     reason: '3100g — cheap block aura, efficient vs physical lineups',            priority: 2 },
+  solar_crest:     { name: 'Solar Crest',          img: 'solar_crest',       reason: '2625g — apply to enemy to shred armor, good support pick',           priority: 2 },
+  pipe:            { name: 'Pipe of Insight',      img: 'pipe',              reason: '3475g — AOE magic barrier, worth it if enemies have mass magic AOE',  priority: 2 },
+  lotus_orb:       { name: 'Lotus Orb',            img: 'lotus_orb',         reason: '3500g — reflects single-target spells, punishes targeted disablers',  priority: 2 },
+  heavens_halberd: { name: "Heaven's Halberd",     img: 'heavens_halberd',   reason: '3500g — disarms carry for 3-4s, efficient when enemy has one hard carry', priority: 2 },
+  hurricane_pike:  { name: 'Hurricane Pike',       img: 'hurricane_pike',    reason: '4200g — push away melee heroes, bonus range attack',                 priority: 2 },
+  black_king_bar:  { name: 'Black King Bar',       img: 'black_king_bar',    reason: '3975g — magic immunity, must-have vs heavy stun/magic lineups',       priority: 3 },
+  cyclone:         { name: "Eul's Scepter",        img: 'cyclone',           reason: '2750g — cheap dispel + interrupts channeling spells',                priority: 2 },
+  sphere:          { name: "Linken's Sphere",       img: 'sphere',            reason: '4600g — blocks one targeted spell, pricier so lower priority in turbo', priority: 1 },
 
   // ---- OFFENSIVE ----
-  blink:           { name: 'Blink Dagger',         img: 'blink',             reason: 'Instant gap-closer — get on squishy heroes fast',         priority: 3 },
-  sheepstick:      { name: 'Scythe of Vyse',       img: 'sheepstick',        reason: 'Hard hex 3.5s — removes any threat instantly',            priority: 2 },
-  orchid:          { name: 'Orchid Malevolence',   img: 'orchid',            reason: 'Silence + damage amp — shut down casters/escapes',        priority: 2 },
-  bloodthorn:      { name: 'Bloodthorn',           img: 'bloodthorn',        reason: 'Silence + guaranteed crits — upgraded Orchid, kill fast',  priority: 2 },
-  nullifier:       { name: 'Nullifier',            img: 'nullifier',         reason: 'Strips BKB, Force Staff, Glimmer off targets before kill', priority: 2 },
-  desolator:       { name: 'Desolator',            img: 'desolator',         reason: 'Reduces armor — melts tanky/high-armor enemies',          priority: 2 },
-  daedalus:        { name: 'Daedalus',             img: 'daedalus',          reason: 'Huge crit damage — burst squishies before they react',    priority: 2 },
-  monkey_king_bar: { name: 'Monkey King Bar',      img: 'monkey_king_bar',   reason: 'True Strike — bypasses evasion (PA, Windranger, etc.)',   priority: 3 },
-  silver_edge:     { name: 'Silver Edge',          img: 'silver_edge',       reason: 'Breaks passives on attack — PA evasion, AM shield, etc.', priority: 3 },
-  diffusal_blade:  { name: 'Diffusal Blade',       img: 'diffusal_blade',    reason: 'Mana burn + slow — destroys mana-dependent heroes',       priority: 2 },
-  abyssal_blade:   { name: 'Abyssal Blade',        img: 'abyssal_blade',     reason: 'Stun + bash — locks down any carry reliably',             priority: 2 },
-  skadi:           { name: 'Eye of Skadi',         img: 'skadi',             reason: 'Strong slow + reduces healing — kite or chase anyone',    priority: 2 },
-  maelstrom:       { name: 'Maelstrom',            img: 'maelstrom',         reason: 'Chain lightning — efficient vs. grouped or illusion teams',priority: 1 },
-  mjollnir:        { name: 'Mjollnir',             img: 'mjollnir',          reason: 'Chain lightning + static shield — upgraded Maelstrom',    priority: 2 },
-  manta:           { name: 'Manta Style',          img: 'manta',             reason: 'Dispels silences/slows + illusions to confuse/split',     priority: 2 },
-  shadow_blade:    { name: 'Shadow Blade',         img: 'invis_sword',       reason: 'Invisibility for initiation or escaping after a kill',    priority: 1 },
-  ethereal_blade:  { name: 'Ethereal Blade',       img: 'ethereal_blade',    reason: 'Amplifies magic damage — combo with nukes for burst kill', priority: 2 },
-  assault:         { name: 'Assault Cuirass',      img: 'assault',           reason: 'Reduces enemy armor — more physical damage output',       priority: 1 },
-  solar_crest:     { name: 'Solar Crest',          img: 'solar_crest',       reason: 'Apply to enemy to shred armor — great on supports',       priority: 1 },
-  radiance:        { name: 'Radiance',             img: 'radiance',          reason: 'Burn damage + miss chance — counters illusion/push teams', priority: 1 },
+  // Very cheap offensive items → priority 3
+  blink:           { name: 'Blink Dagger',         img: 'blink',             reason: '2250g — instant gap-closer, best early initiation item in turbo',    priority: 3 },
+  shadow_blade:    { name: 'Shadow Blade',         img: 'invis_sword',       reason: '2000g — cheap invis for initiation or escape after a kill',           priority: 3 },
+  diffusal_blade:  { name: 'Diffusal Blade',       img: 'diffusal_blade',    reason: '2500g — mana burn + slow early, destroys mana-dependent heroes fast', priority: 3 },
+  maelstrom:       { name: 'Maelstrom',            img: 'maelstrom',         reason: '2700g — chain lightning is efficient and cheap, great first item',    priority: 3 },
+  orchid:          { name: 'Orchid Malevolence',   img: 'orchid',            reason: '3475g — silence + damage amp early, shuts down casters before they cast', priority: 3 },
+  desolator:       { name: 'Desolator',            img: 'desolator',         reason: '3500g — -7 armor on hit, melts enemies fast in short turbo games',   priority: 3 },
+  monkey_king_bar: { name: 'Monkey King Bar',      img: 'monkey_king_bar',   reason: '4200g — True Strike through evasion (PA, Windranger) — get this early', priority: 3 },
+  silver_edge:     { name: 'Silver Edge',          img: 'silver_edge',       reason: '5050g — breaks passives, pricier but worth it vs PA/AM/Bristle',     priority: 2 },
+  manta:           { name: 'Manta Style',          img: 'manta',             reason: '3800g — dispels silences/slows, illusions to split and confuse',      priority: 2 },
+  ethereal_blade:  { name: 'Ethereal Blade',       img: 'ethereal_blade',    reason: '4900g — amplifies magic damage, combo with nuker for burst kill',     priority: 1 },
+  nullifier:       { name: 'Nullifier',            img: 'nullifier',         reason: '4700g — strips BKB/Force Staff/Glimmer before kill, situational',     priority: 1 },
+  assault:         { name: 'Assault Cuirass',      img: 'assault',           reason: '5400g — armor shred aura, expensive but strong vs full physical team', priority: 1 },
+  sheepstick:      { name: 'Scythe of Vyse',       img: 'sheepstick',        reason: '5200g — hard hex, expensive for turbo but game-changing if reached',  priority: 1 },
+  abyssal_blade:   { name: 'Abyssal Blade',        img: 'abyssal_blade',     reason: '6250g — stun + bash, rarely reached in turbo — luxury item',         priority: 1 },
+  bloodthorn:      { name: 'Bloodthorn',           img: 'bloodthorn',        reason: '6275g — silence + crits, too expensive for turbo — buy Orchid instead', priority: 1 },
+  skadi:           { name: 'Eye of Skadi',         img: 'skadi',             reason: '5100g — slow + anti-heal, expensive for turbo — situational luxury',  priority: 1 },
+  daedalus:        { name: 'Daedalus',             img: 'daedalus',          reason: '5150g — huge crit, expensive — only if game goes longer than usual',  priority: 1 },
+  mjollnir:        { name: 'Mjollnir',             img: 'mjollnir',          reason: '5700g — upgraded Maelstrom, expensive — stick to Maelstrom in turbo', priority: 1 },
+  radiance:        { name: 'Radiance',             img: 'radiance',          reason: '5150g — burn + miss chance, too farm-dependent for turbo',            priority: 1 },
 };
 
-// ---- DEFENSIVE items per role ----
+// ---- DEFENSIVE items per role (cheap first = higher score in turbo) ----
 const DEF_ROLE_ITEMS = {
-  Disabler:  ['black_king_bar', 'sphere', 'lotus_orb', 'cyclone', 'force_staff'],
-  Nuker:     ['hood_of_defiance', 'pipe', 'eternal_shroud', 'aeon_disk', 'black_king_bar', 'glimmer_cape'],
-  Carry:     ['ghost', 'heavens_halberd', 'blade_mail', 'crimson_guard', 'hurricane_pike'],
-  Durable:   ['blade_mail', 'aeon_disk', 'ghost', 'pipe'],
-  Escape:    ['force_staff', 'hurricane_pike', 'cyclone'],
-  Initiator: ['black_king_bar', 'aeon_disk', 'force_staff', 'glimmer_cape'],
-  Support:   ['force_staff', 'glimmer_cape', 'lotus_orb'],
-  Pusher:    ['crimson_guard', 'blade_mail'],
+  Disabler:  ['blade_mail', 'force_staff', 'glimmer_cape', 'black_king_bar', 'cyclone', 'lotus_orb', 'sphere'],
+  Nuker:     ['hood_of_defiance', 'glimmer_cape', 'eternal_shroud', 'black_king_bar', 'aeon_disk', 'pipe'],
+  Carry:     ['ghost', 'blade_mail', 'solar_crest', 'crimson_guard', 'heavens_halberd', 'hurricane_pike'],
+  Durable:   ['blade_mail', 'ghost', 'aeon_disk', 'crimson_guard', 'pipe'],
+  Escape:    ['force_staff', 'cyclone', 'glimmer_cape', 'hurricane_pike'],
+  Initiator: ['force_staff', 'glimmer_cape', 'black_king_bar', 'aeon_disk'],
+  Support:   ['force_staff', 'glimmer_cape', 'cyclone', 'lotus_orb'],
+  Pusher:    ['blade_mail', 'crimson_guard', 'solar_crest'],
 };
 
-// ---- OFFENSIVE items per role ----
+// ---- OFFENSIVE items per role (cheap first = higher score in turbo) ----
 const OFF_ROLE_ITEMS = {
-  Disabler:  ['blink', 'sheepstick', 'nullifier', 'orchid', 'ethereal_blade'],
-  Nuker:     ['blink', 'sheepstick', 'ethereal_blade', 'nullifier', 'manta'],
-  Carry:     ['desolator', 'daedalus', 'monkey_king_bar', 'silver_edge', 'abyssal_blade', 'mjollnir', 'skadi'],
-  Durable:   ['desolator', 'diffusal_blade', 'silver_edge', 'abyssal_blade', 'daedalus', 'skadi'],
-  Escape:    ['orchid', 'bloodthorn', 'nullifier', 'shadow_blade', 'blink'],
-  Initiator: ['blink', 'sheepstick', 'shadow_blade', 'nullifier'],
-  Support:   ['sheepstick', 'orchid', 'nullifier', 'ethereal_blade'],
-  Pusher:    ['maelstrom', 'mjollnir', 'radiance', 'assault', 'solar_crest'],
+  Disabler:  ['blink', 'orchid', 'diffusal_blade', 'nullifier', 'sheepstick', 'ethereal_blade'],
+  Nuker:     ['blink', 'orchid', 'diffusal_blade', 'manta', 'nullifier', 'ethereal_blade'],
+  Carry:     ['maelstrom', 'desolator', 'monkey_king_bar', 'diffusal_blade', 'silver_edge', 'skadi', 'daedalus', 'abyssal_blade'],
+  Durable:   ['diffusal_blade', 'desolator', 'maelstrom', 'silver_edge', 'monkey_king_bar', 'skadi'],
+  Escape:    ['shadow_blade', 'orchid', 'blink', 'nullifier', 'bloodthorn'],
+  Initiator: ['blink', 'shadow_blade', 'orchid', 'sheepstick', 'nullifier'],
+  Support:   ['orchid', 'blink', 'sheepstick', 'nullifier', 'ethereal_blade'],
+  Pusher:    ['maelstrom', 'desolator', 'assault', 'radiance', 'mjollnir'],
 };
 
 // ---- Hero-specific items (hero_id → {defensive[], offensive[], note}) ----
@@ -286,7 +290,7 @@ function renderHeroGrid() {
 function renderTeams() {
   renderSlots('radiant-slots', state.radiantTeam, false);
   renderSlots('dire-slots', state.direTeam, true);
-  document.getElementById('radiant-count').textContent = `${state.radiantTeam.length}/5`;
+  document.getElementById('radiant-count').textContent = `${state.radiantTeam.length}/1`;
   document.getElementById('dire-count').textContent    = `${state.direTeam.length}/5`;
 }
 
@@ -298,7 +302,8 @@ function renderSlots(containerId, team, isDire) {
       <div class="slot-name">${hero.localized_name}</div>
       <button class="remove-btn" data-id="${hero.id}" data-dire="${isDire}">✕</button>
     </div>`).join('');
-  for (let i = team.length; i < 5; i++) html += `<div class="hero-slot empty"></div>`;
+  const maxSlots = isDire ? 5 : 1;
+  for (let i = team.length; i < maxSlots; i++) html += `<div class="hero-slot empty"></div>`;
   el.innerHTML = html;
 
   el.querySelectorAll('.remove-btn').forEach(btn => {
@@ -333,10 +338,11 @@ function showCounterLoading() {
 
 function displayCounters(counters) {
   const el = document.getElementById('counters-content');
-  if (state.direTeam.length === 0) { el.innerHTML = `<p class="placeholder-text">Add heroes to the enemy team to see counters</p>`; return; }
+  if (state.direTeam.length === 0) { el.innerHTML = `<p class="placeholder-text">Add heroes to the enemy to see counters</p>`; return; }
   if (!counters || counters.length === 0) { el.innerHTML = `<p class="placeholder-text">Loading counter data...</p>`; return; }
 
-  el.innerHTML = counters.map((c, i) => {
+  el.innerHTML = `<div class="turbo-note">⚡ Data from normal matches — matchups still apply in Turbo</div>` +
+  counters.map((c, i) => {
     const pct  = Math.round(c.avgWr * 100);
     const barW = Math.max(0, Math.min(100, (pct - 48) / 8 * 100));
     const cls  = pct >= 54 ? 'great' : 'good';
@@ -349,7 +355,7 @@ function displayCounters(counters) {
       </div>
       <span class="counter-winrate ${cls}">${pct}%</span>
     </div>`;
-  }).join('');
+  }).join('') + '';
 }
 
 function renderItems() {
@@ -428,7 +434,7 @@ function handleHeroClick(hero) {
   if (isInAnyTeam(hero.id)) return;
 
   if (state.pickingFor === 'radiant') {
-    if (state.radiantTeam.length >= 5) return;
+    if (state.radiantTeam.length >= 1) return;
     state.radiantTeam.push(hero);
   } else {
     if (state.direTeam.length >= 5) return;
@@ -465,10 +471,10 @@ function setPickingFor(team) {
   const btn = document.getElementById('team-toggle');
   if (team === 'radiant') {
     btn.className = 'team-toggle radiant';
-    btn.innerHTML = 'Picking for <strong>RADIANT</strong>';
+    btn.innerHTML = 'Picking for <strong>MY HERO</strong>';
   } else {
     btn.className = 'team-toggle dire';
-    btn.innerHTML = 'Picking for <strong>DIRE</strong>';
+    btn.innerHTML = 'Picking for <strong>ENEMY</strong>';
   }
 }
 

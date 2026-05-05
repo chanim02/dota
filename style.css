@@ -345,6 +345,30 @@ body {
 
 .hero-slot:hover .remove-btn { display: flex; }
 
+.my-hero-panel {
+  flex: 0 0 auto;
+  width: 130px;
+}
+
+.my-hero-panel .hero-slot {
+  width: 120px;
+  height: 80px;
+  border-color: var(--radiant);
+}
+
+.my-hero-panel .hero-slot.empty {
+  border-color: var(--radiant-dim);
+}
+
+.my-hero-panel .hero-slot.empty::after {
+  content: 'Pick your hero';
+  font-size: 10px;
+  color: var(--radiant-dim);
+  text-align: center;
+  padding: 4px;
+  line-height: 1.4;
+}
+
 .vs-divider {
   display: flex;
   align-items: center;
@@ -514,6 +538,16 @@ body {
 
 .defensive-header { color: #5b8ac9; border-color: #1e3050; }
 .offensive-header  { color: #cc6644; border-color: #3a1e14; }
+
+.turbo-note {
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 4px 6px;
+  margin-bottom: 8px;
+  border-left: 2px solid #c6a92a;
+  background: rgba(198,169,42,0.06);
+  border-radius: 0 3px 3px 0;
+}
 
 .hero-note {
   font-size: 10px;
