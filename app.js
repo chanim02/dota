@@ -67,6 +67,18 @@ Object.assign(ITEMS, {
   witch_blade:     { name: 'Witch Blade',        img: 'witch_blade',       reason: '2800g — int-to-attack conversion, good on int heroes who want right-click',priority: 2 },
 });
 
+// ---- Which defensive items are valid per hero attribute ----
+const ATTR_DEFENSIVE = {
+  int:      ['ghost', 'glimmer_cape', 'force_staff', 'hood_of_defiance', 'eternal_shroud',
+             'aeon_disk', 'cyclone', 'black_king_bar', 'lotus_orb', 'pipe', 'solar_crest', 'sphere'],
+  agi:      ['ghost', 'blade_mail', 'heavens_halberd', 'black_king_bar', 'force_staff',
+             'crimson_guard', 'hurricane_pike', 'aeon_disk', 'sphere', 'glimmer_cape', 'solar_crest'],
+  str:      ['black_king_bar', 'blade_mail', 'crimson_guard', 'force_staff', 'heavens_halberd',
+             'aeon_disk', 'lotus_orb', 'pipe', 'solar_crest', 'ghost'],
+  all_attr: ['ghost', 'glimmer_cape', 'force_staff', 'black_king_bar', 'blade_mail',
+             'hood_of_defiance', 'eternal_shroud', 'aeon_disk', 'cyclone', 'lotus_orb', 'solar_crest'],
+};
+
 // ---- Which offensive items are valid per hero attribute ----
 const ATTR_OFFENSIVE = {
   int: ['blink','veil_of_discord','phylactery','kaya','rod_of_atos','aghanims_scepter','orchid',
@@ -191,12 +203,15 @@ function getMyHeroAttr() {
   return state.radiantTeam[0].primary_attr; // 'str', 'agi', 'int', 'all_attr'
 }
 
-function filterOffensiveByAttr(items) {
+function filterByAttr(items, attrMap) {
   const attr = getMyHeroAttr();
   if (!attr) return items;
-  const allowed = new Set(ATTR_OFFENSIVE[attr] || []);
+  const allowed = new Set(attrMap[attr] || []);
   return items.filter(item => allowed.has(item.key));
 }
+
+function filterOffensiveByAttr(items) { return filterByAttr(items, ATTR_OFFENSIVE); }
+function filterDefensiveByAttr(items) { return filterByAttr(items, ATTR_DEFENSIVE); }
 
 // =============================================
 // ITEM RECOMMENDATIONS
@@ -233,9 +248,9 @@ function computeTeamItems() {
       defScores['hurricane_pike'] = (defScores['hurricane_pike'] || 0) + 4;
     }
   }
-  const offAll = topFromScores(offScores, 20);
-  const offensive = filterOffensiveByAttr(offAll).slice(0, 6);
-  return { defensive: topFromScores(defScores, 6), offensive };
+  const defensive = filterDefensiveByAttr(topFromScores(defScores, 20)).slice(0, 6);
+  const offensive = filterOffensiveByAttr(topFromScores(offScores, 20)).slice(0, 6);
+  return { defensive, offensive };
 }
 
 function computeHeroItems(heroId) {
@@ -258,9 +273,9 @@ function computeHeroItems(heroId) {
   const offScores = scoreItems(OFF_ROLE_ITEMS, enemies);
   if (hero.attack_type === 'Melee') defScores['hurricane_pike'] = (defScores['hurricane_pike'] || 0) + 4;
 
-  const offAll = topFromScores(offScores, 15);
-  const offensive = filterOffensiveByAttr(offAll).slice(0, 5);
-  return { defensive: topFromScores(defScores, 5), offensive };
+  const defensive = filterDefensiveByAttr(topFromScores(defScores, 15)).slice(0, 5);
+  const offensive = filterOffensiveByAttr(topFromScores(offScores, 15)).slice(0, 5);
+  return { defensive, offensive };
 }
 
 // =============================================
@@ -558,6 +573,22 @@ async function init() {
 
     document.getElementById('team-toggle').addEventListener('click', () => {
       setPickingFor(state.pickingFor === 'radiant' ? 'dire' : 'radiant');
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      state.radiantTeam     = [];
+      state.direTeam        = [];
+      state.selectedEnemyHero = null;
+      state.search          = '';
+      state.activeItemTab   = 'team';
+      document.getElementById('search-input').value = '';
+      document.querySelectorAll('.item-tab').forEach(t => t.classList.remove('active'));
+      document.querySelector('[data-tab="team"]').classList.add('active');
+      setPickingFor('radiant');
+      renderHeroGrid();
+      renderTeams();
+      renderItems();
+      displayCounters([]);
     });
 
     document.querySelectorAll('.item-tab').forEach(tab => {
