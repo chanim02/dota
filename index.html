@@ -201,6 +201,19 @@
 </div>
 
 <script>
+  // Finn riktig base-path uansett hvordan serveren kjører
+  // (bruker app.js sin absolutte URL som referanse siden den ligger i samme mappe)
+  const _appSrc = document.querySelector('script[src="app.js"]');
+  const _base   = _appSrc
+    ? _appSrc.src.replace('app.js', '')
+    : (window.location.href.replace(/\/[^/]*$/, '/'));
+
+  // Sett korrekt src på alle goof-bilder
+  document.querySelectorAll('.goof img').forEach(img => {
+    const filename = img.getAttribute('src');
+    img.src = _base + filename;
+  });
+
   // Klikk på et bilde → det flyr av skjermen
   document.querySelectorAll('.goof').forEach(el => {
     el.addEventListener('click', () => {
