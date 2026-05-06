@@ -135,6 +135,155 @@ const HERO_SPECIFIC = {
 };
 
 // =============================================
+// HERO SHORTCUTS  (abbreviation → localized_name)
+// =============================================
+const SHORTCUTS = {
+  // Carries / AGI
+  'am':     'Anti-Mage',
+  'pa':     'Phantom Assassin',
+  'pl':     'Phantom Lancer',
+  'tb':     'Terrorblade',
+  'spec':   'Spectre',
+  'morph':  'Morphling',
+  'jugg':   'Juggernaut',
+  'jug':    'Juggernaut',
+  'slark':  'Slark',
+  'naga':   'Naga Siren',
+  'void':   'Faceless Void',
+  'fv':     'Faceless Void',
+  'drow':   'Drow Ranger',
+  'dr':     'Drow Ranger',
+  'clinkz': 'Clinkz',
+  'medusa': 'Medusa',
+  'dusa':   'Medusa',
+  'weaver': 'Weaver',
+  'gyro':   'Gyrocopter',
+  'viper':  'Viper',
+  'razor':  'Razor',
+  'sniper': 'Sniper',
+  'luna':   'Luna',
+  'mira':   'Mirana',
+  'mk':     'Monkey King',
+  'bh':     'Bounty Hunter',
+  'ls':     'Lifestealer',
+  'ta':     'Templar Assassin',
+  'troll':  'Troll Warlord',
+  'ursa':   'Ursa',
+  'veno':   'Venomancer',
+  'nyx':    'Nyx Assassin',
+  'riki':   'Riki',
+  'bs':     'Bloodseeker',
+  'bb':     'Bristleback',
+  'huskar': 'Huskar',
+  'husk':   'Huskar',
+  'witch':  'Witch Doctor',
+
+  // Midlaners
+  'sf':     'Shadow Fiend',
+  'qop':    'Queen of Pain',
+  'storm':  'Storm Spirit',
+  'ember':  'Ember Spirit',
+  'invoker':'Invoker',
+  'inv':    'Invoker',
+  'lina':   'Lina',
+  'puck':   'Puck',
+  'od':     'Outworld Destroyer',
+  'zeus':   'Zeus',
+  'lesh':   'Leshrac',
+  'vis':    'Visage',
+  'visage': 'Visage',
+  'necro':  'Necrophos',
+  'arc':    'Arc Warden',
+  'timber': 'Timbersaw',
+  'timb':   'Timbersaw',
+  'sky':    'Skywrath Mage',
+  'skyw':   'Skywrath Mage',
+
+  // Supports / INT
+  'cm':     'Crystal Maiden',
+  'ss':     'Shadow Shaman',
+  'lion':   'Lion',
+  'lich':   'Lich',
+  'bane':   'Bane',
+  'jakiro': 'Jakiro',
+  'jak':    'Jakiro',
+  'kotl':   'Keeper of the Light',
+  'rubick': 'Rubick',
+  'rub':    'Rubick',
+  'oracle': 'Oracle',
+  'dazzle': 'Dazzle',
+  'chen':   'Chen',
+  'ench':   'Enchantress',
+  'io':     'Io',
+  'silencer':'Silencer',
+  'sil':    'Silencer',
+  'disruptor':'Disruptor',
+  'dis':    'Disruptor',
+  'ogre':   'Ogre Magi',
+  'pudge':  'Pudge',
+  'omni':   'Omniknight',
+  'warlock':'Warlock',
+  'war':    'Warlock',
+  'wd':     'Witch Doctor',
+  'grimstroke':'Grimstroke',
+  'grim':   'Grimstroke',
+  'phoenix':'Phoenix',
+  'pango':  'Pangolier',
+  'pugna':  'Pugna',
+
+  // Initiators / Offlane / STR
+  'axe':    'Axe',
+  'dk':     'Dragon Knight',
+  'sven':   'Sven',
+  'tide':   'Tidehunter',
+  'es':     'Earthshaker',
+  'enigma': 'Enigma',
+  'magnus': 'Magnus',
+  'mag':    'Magnus',
+  'bat':    'Batrider',
+  'bara':   'Spirit Breaker',
+  'sb':     'Spirit Breaker',
+  'kunk':   'Kunkka',
+  'ds':     'Dark Seer',
+  'wk':     'Wraith King',
+  'sk':     'Sand King',
+  'ns':     'Night Stalker',
+  'doom':   'Doom',
+  'slardar':'Slardar',
+  'slar':   'Slardar',
+  'lc':     'Legion Commander',
+  'np':     "Nature's Prophet",
+  'furion': "Nature's Prophet",
+  'wr':     'Windranger',
+  'wind':   'Windranger',
+  'treant': 'Treant Protector',
+  'tree':   'Treant Protector',
+  'brood':  'Broodmother',
+  'tiny':   'Tiny',
+  'tusk':   'Tusk',
+  'meepo':  'Meepo',
+  'undying':'Undying',
+  'clock':  'Clockwerk',
+  'cw':     'Clockwerk',
+  'techies':'Techies',
+  'tech':   'Techies',
+  'primal': 'Primal Beast',
+  'pb':     'Primal Beast',
+  'earth':  'Earth Spirit',
+  'void_spirit':'Void Spirit',
+  'vs':     'Void Spirit',
+  'mars':   'Mars',
+  'hoodwink':'Hoodwink',
+  'hw':     'Hoodwink',
+  'snapfire':'Snapfire',
+  'snap':   'Snapfire',
+  'marci':  'Marci',
+  'muerta': 'Muerta',
+  'ringmaster':'Ringmaster',
+  'ring':   'Ringmaster',
+};
+
+// =============================================
 // STATE
 // =============================================
 const state = {
@@ -188,8 +337,12 @@ function getFilteredHeroes() {
   let heroes = state.allHeroes;
   if (state.attrFilter !== 'all') heroes = heroes.filter(h => h.primary_attr === state.attrFilter);
   if (state.search) {
-    const q = state.search.toLowerCase();
-    heroes = heroes.filter(h => h.localized_name.toLowerCase().includes(q));
+    const q = state.search.toLowerCase().trim();
+    const shortcutMatch = SHORTCUTS[q]; // e.g. "ss" → "Shadow Shaman"
+    heroes = heroes.filter(h => {
+      const name = h.localized_name.toLowerCase();
+      return name.includes(q) || (shortcutMatch && h.localized_name === shortcutMatch);
+    });
   }
   return heroes;
 }
@@ -558,8 +711,15 @@ async function init() {
     searchEl.focus();
 
     document.addEventListener('keydown', e => {
-      if (e.key === '/' && document.activeElement !== searchEl) { e.preventDefault(); searchEl.focus(); searchEl.select(); }
-      if (e.key === 'Tab' && document.activeElement !== searchEl) { e.preventDefault(); setPickingFor(state.pickingFor === 'radiant' ? 'dire' : 'radiant'); }
+      // Tab toggles team
+      if (e.key === 'Tab') { e.preventDefault(); setPickingFor(state.pickingFor === 'radiant' ? 'dire' : 'radiant'); return; }
+      // Escape clears search
+      if (e.key === 'Escape') { state.search = ''; searchEl.value = ''; searchEl.blur(); renderHeroGrid(); return; }
+      // Any printable character focuses search and types into it
+      if (document.activeElement !== searchEl && e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        searchEl.focus();
+        // Let the character fall through naturally into the input
+      }
     });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
