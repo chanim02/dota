@@ -82,7 +82,7 @@ const ATTR_DEFENSIVE = {
 // ---- Which offensive items are valid per hero attribute ----
 const ATTR_OFFENSIVE = {
   int: ['blink','veil_of_discord','phylactery','kaya','rod_of_atos','aghanims_scepter','orchid',
-        'gleipnir','ethereal_blade','sheepstick','nullifier','witch_blade','octarine_core','refresher','shadow_blade'],
+        'gleipnir','sheepstick','octarine_core','refresher','witch_blade','ethereal_blade'],
   agi: ['maelstrom','desolator','monkey_king_bar','diffusal_blade','silver_edge','manta','abyssal_blade',
         'daedalus','skadi','mjollnir','blink','orchid','bloodthorn','nullifier','shadow_blade'],
   str: ['blink','desolator','abyssal_blade','silver_edge','orchid','sheepstick','skadi','nullifier',
@@ -115,23 +115,383 @@ const OFF_ROLE_ITEMS = {
   Pusher:    ['maelstrom', 'desolator', 'assault', 'radiance', 'mjollnir'],
 };
 
-// ---- Hero-specific items (hero_id → {defensive[], offensive[], note}) ----
+// ============================================================
+// HERO ARCHETYPES — recommended build for MY hero
+// Used by getMyHeroBuild() when no MY_HERO_SPECIFIC entry found
+// ============================================================
+const HERO_ARCHETYPES = {
+  agi_carry: {
+    defensive: ['ghost','blade_mail','manta','black_king_bar','hurricane_pike','heavens_halberd'],
+    offensive: ['maelstrom','desolator','diffusal_blade','blink','silver_edge','monkey_king_bar','skadi'],
+    note: 'Rush Maelstrom — chain lightning is extremely gold-efficient in turbo. Black King Bar vs magic-heavy lineups.'
+  },
+  agi_utility: {
+    defensive: ['ghost','force_staff','blade_mail','black_king_bar','glimmer_cape','manta'],
+    offensive: ['blink','orchid','diffusal_blade','shadow_blade','desolator'],
+    note: 'Blink or Shadow Blade for gap-close/escape. Orchid for silence lockdown. Manta to dispel slows.'
+  },
+  agi_support: {
+    defensive: ['glimmer_cape','force_staff','ghost','solar_crest','lotus_orb'],
+    offensive: ['blink','orchid','shadow_blade'],
+    note: 'Glimmer Cape + Force Staff are core every game. Solar Crest on carry or enemy to boost fights.'
+  },
+  int_nuker: {
+    defensive: ['ghost','force_staff','cyclone','black_king_bar','aeon_disk','eternal_shroud'],
+    offensive: ['blink','kaya','veil_of_discord','phylactery','orchid','aghanims_scepter','sheepstick','octarine_core'],
+    note: 'Veil of Discord + Kaya amplify all spell damage. Blink in, burst, blink out. Aghanim\'s is usually core.'
+  },
+  int_support: {
+    defensive: ['glimmer_cape','force_staff','ghost','cyclone','pipe','lotus_orb','solar_crest'],
+    offensive: ['blink','orchid','rod_of_atos','gleipnir','aghanims_scepter','sheepstick'],
+    note: 'Force Staff + Glimmer Cape are must-buys every game. Aghanim\'s upgrades your toolkit. Pipe vs magic lineups.'
+  },
+  str_initiator: {
+    defensive: ['black_king_bar','blade_mail','aeon_disk','crimson_guard','force_staff'],
+    offensive: ['blink','shadow_blade','orchid','sheepstick','desolator'],
+    note: 'Blink Dagger is your #1 item — buy it first every game. BKB for magic-heavy lineups. Orchid to silence key heroes.'
+  },
+  str_carry: {
+    defensive: ['black_king_bar','blade_mail','heavens_halberd','aeon_disk'],
+    offensive: ['blink','desolator','abyssal_blade','silver_edge','skadi','monkey_king_bar'],
+    note: 'Black King Bar + Blink are core in turbo. Desolator shreds armor. Heaven\'s Halberd vs ranged carries.'
+  },
+  str_tank: {
+    defensive: ['blade_mail','black_king_bar','crimson_guard','pipe','lotus_orb','aeon_disk'],
+    offensive: ['blink','desolator','sheepstick','nullifier'],
+    note: 'Blade Mail punishes right-clickers hard. Crimson Guard blocks all chip damage in turbo fights.'
+  },
+  str_support: {
+    defensive: ['force_staff','glimmer_cape','pipe','lotus_orb','aeon_disk','solar_crest'],
+    offensive: ['blink','orchid','sheepstick'],
+    note: 'Pipe of Insight is excellent vs magic-heavy lineups. Solar Crest buffs carry or debuffs tanky enemies.'
+  },
+  universal: {
+    defensive: ['ghost','force_staff','black_king_bar','blade_mail','aeon_disk','manta'],
+    offensive: ['blink','desolator','orchid','sheepstick','nullifier','diffusal_blade'],
+    note: 'Universal heroes scale with all stats. Blink + Orchid works on most universals. Flexible build.'
+  },
+};
+
+// ---- MY hero-specific overrides (exceptions where archetype gives wrong items) ----
+const MY_HERO_SPECIFIC = {
+  74: { // Invoker — has Ghost Walk, so no Shadow Blade; specific spell-caster build
+    defensive: ['black_king_bar','force_staff','cyclone','aeon_disk','ghost'],
+    offensive: ['blink','orchid','aghanims_scepter','octarine_core','sheepstick','refresher'],
+    note: 'Never buy Shadow Blade — you have Ghost Walk. Rush Blink + Orchid. Octarine Core gives 25% CDR on all spells and abilities. Refresher for double ult.'
+  },
+  82: { // Meepo — all items must work for all copies
+    defensive: ['ghost','force_staff','aeon_disk','black_king_bar'],
+    offensive: ['blink','diffusal_blade','maelstrom','aghanims_scepter','sheepstick'],
+    note: 'Items affect all Meepos. Diffusal Blade poof-combo is devastating. Blink + Poof = instant burst. Aghanim\'s gives all Meepos their ult upgrade.'
+  },
+  80: { // Lone Druid — items go on the bear
+    defensive: ['ghost','aeon_disk','blade_mail','black_king_bar'],
+    offensive: ['desolator','maelstrom','orchid','silver_edge','aghanims_scepter'],
+    note: 'Items like Desolator/Maelstrom go on the Spirit Bear. Orchid silences targets. Aghanim\'s upgrades the bear. You are fragile — stay back.'
+  },
+  67: { // Spectre — Radiance is core even in turbo
+    defensive: ['blade_mail','ghost','manta','black_king_bar'],
+    offensive: ['radiance','desolator','skadi','diffusal_blade','silver_edge'],
+    note: 'Radiance is core for farm and Haunt illusion burn. Blade Mail + Dispersion return all damage dealt to you. Manta dispels slows and silences.'
+  },
+  61: { // Broodmother — spiderlings are your damage
+    defensive: ['blade_mail','ghost','black_king_bar','force_staff'],
+    offensive: ['orchid','desolator','maelstrom','silver_edge'],
+    note: 'Maelstrom chain-hits all spiderlings for huge AOE. Orchid silences enemies who try to kite. Blade Mail punishes anyone who hits you.'
+  },
+};
+
+// ---- Counter items vs specific ENEMY heroes (hero_id → what to buy to beat them) ----
 const HERO_SPECIFIC = {
-  1:  { defensive: ['sphere','force_staff','ghost'],         offensive: ['orchid','diffusal_blade','skadi'],        note: 'Silence before he blinks; Diffusal burns his mana shield; Skadi slows his chase' },
-  2:  { defensive: ['ghost','force_staff','blade_mail'],     offensive: ['blink','sheepstick','orchid'],            note: "Ghost Scepter — untargetable during Berserker's Call; Blink to stay out of range" },
-  5:  { defensive: ['black_king_bar','force_staff','pipe'],  offensive: ['orchid','blink','sheepstick'],            note: 'BKB blocks Freezing Field; Orchid interrupts her ult channel; Blink to close fast' },
-  8:  { defensive: ['ghost','heavens_halberd','blade_mail'], offensive: ['orchid','abyssal_blade','sheepstick'],    note: "Ghost Scepter during Omnislash; Orchid silences so he can't pop BKB" },
-  11: { defensive: ['black_king_bar','pipe','aeon_disk'],    offensive: ['blink','sheepstick','nullifier'],         note: 'BKB + Pipe survives Requiem; Blink out of his Shadowraze zones; Sheep before ult' },
-  25: { defensive: ['black_king_bar','sphere','aeon_disk'],  offensive: ['blink','sheepstick','ethereal_blade'],   note: "BKB blocks Laguna Blade; Linken's blocks Dragon Slave targeting; Blink to gap-close" },
-  26: { defensive: ['black_king_bar','aeon_disk','sphere'],  offensive: ['blink','sheepstick','blink'],             note: "BKB blocks Finger + Hex; Aeon Disk survives his burst combo" },
-  35: { defensive: ['force_staff','ghost','blade_mail'],     offensive: ['blink','sheepstick','orchid'],            note: 'Force Staff pushes you out of hook range; stay spread to deny easy hooks' },
-  41: { defensive: ['black_king_bar','sphere','force_staff'],offensive: ['monkey_king_bar','orchid','silver_edge'], note: 'MKB removes Blur evasion; Orchid silences her Windrun; Silver Edge also breaks Blur' },
-  44: { defensive: ['blade_mail','ghost','aeon_disk'],       offensive: ['monkey_king_bar','silver_edge','desolator'],note: 'MKB true strike through Blur; Silver Edge breaks evasion; fight her before Dagger' },
-  74: { defensive: ['black_king_bar','sphere','pipe'],       offensive: ['blink','sheepstick','nullifier'],         note: 'BKB blocks most Invocations; Linken blocks single-target; jump him before he invokes' },
-  75: { defensive: ['black_king_bar','sphere','pipe'],       offensive: ['blink','sheepstick','nullifier'],         note: 'BKB blocks most Invocations; Linken blocks single-target; jump him before he invokes' },
-  86: { defensive: ['black_king_bar','force_staff','aeon_disk'],offensive: ['blink','orchid','sheepstick'],        note: 'BKB blocks Lasso + Reverse Polarity; Force Staff to escape; Orchid before he ults' },
-  89: { defensive: ['sphere','force_staff','ghost'],         offensive: ['orchid','sheepstick','blink'],           note: "Linken's blocks Fiend's Grip; Orchid to silence him before he sleeps you" },
-  104:{ defensive: ['blade_mail','ghost','aeon_disk'],       offensive: ['monkey_king_bar','silver_edge','desolator'],note: 'MKB through Blur; Silver Edge breaks passives; burst her before Phantom Strike' },
+  // Anti-Mage
+  1:  { defensive: ['sphere','force_staff','ghost'],            offensive: ['orchid','diffusal_blade','skadi'],
+        note: 'Silence him before he blinks; Diffusal burns his mana shield; Skadi slows his escape' },
+  // Axe
+  2:  { defensive: ['ghost','force_staff','blade_mail'],        offensive: ['blink','sheepstick','orchid'],
+        note: "Ghost Scepter — untargetable during Berserker's Call; Blade Mail returns his Call damage; Blink out of range" },
+  // Bane
+  3:  { defensive: ['sphere','aeon_disk','black_king_bar'],     offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's blocks Fiend's Grip; BKB breaks Nightmare; Orchid silences before he casts; Aeon Disk saves from burst combo" },
+  // Bloodseeker
+  4:  { defensive: ['ghost','force_staff','black_king_bar'],    offensive: ['orchid','blink','desolator'],
+        note: 'Stand still when low HP — Rupture damages you for moving; BKB blocks Rupture; Ghost Scepter while rupturing' },
+  // Crystal Maiden
+  5:  { defensive: ['black_king_bar','pipe','aeon_disk'],       offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB blocks Freezing Field; Pipe for team magic resist; Orchid interrupts her ult channel; Blink in to kill her' },
+  // Drow Ranger
+  6:  { defensive: ['ghost','force_staff','blade_mail'],        offensive: ['blink','desolator','shadow_blade'],
+        note: 'Get a melee hero close — her aura breaks; Ghost Scepter blocks her right-click; Blink/Shadow Blade to close gap fast' },
+  // Earthshaker
+  7:  { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Spread out wide to minimize Echo Slam bounce damage; Force Staff out of Fissure range; Orchid before he channels' },
+  // Juggernaut
+  8:  { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','abyssal_blade','sheepstick'],
+        note: "Ghost Scepter during Omnislash makes you untargetable; Heaven's Halberd disarms between spins; Orchid silences BKB" },
+  // Mirana
+  9:  { defensive: ['ghost','force_staff','glimmer_cape'],      offensive: ['orchid','blink','monkey_king_bar'],
+        note: 'MKB hits through Moonlight Shadow invis; Orchid cancels Sacred Arrow channel; Force Staff out of Arrow range' },
+  // Morphling
+  10: { defensive: ['sphere','force_staff','ghost'],            offensive: ['orchid','sheepstick','blink'],
+        note: "Linken's blocks Waveform targeting; Orchid during Attribute Shift so he can't sustain; burst him before Replicate" },
+  // Shadow Fiend
+  11: { defensive: ['black_king_bar','pipe','aeon_disk'],       offensive: ['blink','sheepstick','nullifier'],
+        note: 'BKB + Pipe survives Requiem of Souls; Blink out of his Shadowraze zone before ult lands; Sheep cancels Requiem' },
+  // Phantom Lancer
+  12: { defensive: ['ghost','blade_mail','heavens_halberd'],    offensive: ['maelstrom','desolator','silver_edge'],
+        note: 'Maelstrom chain lightning hits ALL illusions at once; Blade Mail returns illusion damage back; kill real PL fast' },
+  // Puck
+  13: { defensive: ['force_staff','black_king_bar','aeon_disk'],offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff out of Dream Coil before it snaps; BKB prevents Phase Shift disable; Orchid during Phase Shift' },
+  // Pudge
+  14: { defensive: ['force_staff','ghost','blade_mail'],        offensive: ['blink','sheepstick','orchid'],
+        note: 'Force Staff pushes you out of hook range; stay spread so he cannot isolate you; Blade Mail returns Rot damage' },
+  // Razor
+  15: { defensive: ['force_staff','ghost','aeon_disk'],         offensive: ['orchid','blink','nullifier'],
+        note: 'Force Staff breaks Plasma Field link immediately; stay mobile to avoid Static Link stacks building up' },
+  // Sand King
+  16: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'Spread out to reduce Epicenter pulses; BKB + Pipe for his AOE combo; Force Staff out of Burrowstrike range' },
+  // Storm Spirit
+  17: { defensive: ['ghost','black_king_bar','aeon_disk'],      offensive: ['orchid','sheepstick','rod_of_atos'],
+        note: 'Orchid early before he has mana to ball out; Rod of Atos roots him in place; Ghost to survive burst' },
+  // Sven
+  18: { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','blink','sheepstick'],
+        note: "Ghost Scepter during God's Strength makes you untargetable; Heaven's Halberd disarms him; Orchid before he ults" },
+  // Tiny
+  19: { defensive: ['force_staff','ghost','aeon_disk'],         offensive: ['blink','sheepstick','orchid'],
+        note: 'Force Staff repositions after being Tossed; Aeon Disk saves from Avalanche+Toss combo burst; Orchid silences him' },
+  // Vengeful Spirit
+  20: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','desolator'],
+        note: 'Force Staff prevents Swap positioning; Ghost Scepter vs her magic damage; Orchid silences before she Swaps' },
+  // Windranger
+  21: { defensive: ['black_king_bar','sphere','force_staff'],   offensive: ['monkey_king_bar','orchid','silver_edge'],
+        note: 'MKB true strike removes Focus Fire evasion; Silver Edge also breaks evasion; Orchid cancels Windrun + silences' },
+  // Zeus
+  22: { defensive: ['hood_of_defiance','eternal_shroud','pipe'],offensive: ['blink','orchid','sheepstick'],
+        note: 'Stack magic resist — Hood + Eternal Shroud reduces his nuke to almost nothing; Orchid when he has no mana' },
+  // Kunkka
+  23: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff to reposition after Torrent; Ghost Scepter vs Tidebringer cleave; spread vs Ghost Ship AOE' },
+  // Lina
+  25: { defensive: ['black_king_bar','sphere','aeon_disk'],     offensive: ['blink','sheepstick','orchid'],
+        note: "BKB blocks Laguna Blade; Linken's blocks Dragon Slave targeting; Aeon Disk survives her burst combo" },
+  // Lion
+  26: { defensive: ['black_king_bar','aeon_disk','sphere'],     offensive: ['blink','sheepstick','orchid'],
+        note: "BKB blocks Finger of Death + Hex; Linken's blocks Hex targeting; Aeon Disk saves from full combo" },
+  // Shadow Shaman
+  27: { defensive: ['black_king_bar','force_staff','sphere'],   offensive: ['blink','orchid','sheepstick'],
+        note: "BKB breaks Shackles channel immediately; Linken's blocks Hex; Force Staff escapes Hex/Shackles" },
+  // Slardar
+  28: { defensive: ['ghost','force_staff','black_king_bar'],    offensive: ['orchid','blink','desolator'],
+        note: 'Ghost Scepter vs his physical damage; BKB blocks Slithereen Crush; Force Staff out of Bash range' },
+  // Tidehunter
+  29: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB breaks Ravage stun; Force Staff out before he ults; Orchid silences before he channels Ravage' },
+  // Witch Doctor
+  30: { defensive: ['force_staff','black_king_bar','aeon_disk'],offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB blocks Death Ward targeting; Force Staff out of Paralyzing Cask bounces; Orchid cancels his ult cast' },
+  // Lich
+  31: { defensive: ['force_staff','ghost','pipe'],              offensive: ['blink','orchid','sheepstick'],
+        note: 'Spread out so Chain Frost bounces fewer times; Force Staff out of Sinister Gaze; Pipe blocks Chain Frost magic' },
+  // Riki
+  32: { defensive: ['glimmer_cape','ghost','force_staff'],      offensive: ['orchid','desolator','blink'],
+        note: 'Orchid reveals him from Smoke Screen invis; Glimmer Cape lets you invis too; ward the area to track him' },
+  // Enigma
+  33: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB breaks Black Hole; Force Staff out before his ult lands; Orchid silences the channel immediately' },
+  // Tinker
+  34: { defensive: ['sphere','black_king_bar','force_staff'],   offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's blocks Laser blind; BKB resists his nuke combo; Orchid during Rearm channel to deny another rotation" },
+  // Sniper
+  35: { defensive: ['ghost','force_staff','black_king_bar'],    offensive: ['blink','shadow_blade','desolator'],
+        note: 'Blink or Shadow Blade to close gap instantly; Ghost Scepter blocks Assassinate; force him off his perch' },
+  // Necrophos
+  36: { defensive: ['ghost','aeon_disk','black_king_bar'],      offensive: ['orchid','blink','nullifier'],
+        note: "Ghost Scepter blocks Reaper's Scythe; don't use lifesteal vs Sadist stacks; Nullifier dispels Heartstopper" },
+  // Warlock
+  37: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff escapes Fatal Bonds; BKB blocks Upheaval; focus Warlock first — kill him before the Golem wrecks you' },
+  // Beastmaster
+  38: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','desolator'],
+        note: 'Orchid cancels Primal Roar before it lands; Force Staff out of roar range; kill the Hawk for vision denial' },
+  // Queen of Pain
+  39: { defensive: ['black_king_bar','aeon_disk','force_staff'],offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB blocks Sonic Wave; Aeon Disk saves from her burst combo; Orchid silences Blink dagger escape' },
+  // Venomancer
+  40: { defensive: ['hood_of_defiance','pipe','eternal_shroud'],offensive: ['orchid','blink','desolator'],
+        note: 'Stack magic resist — Poison Nova is pure magic; Pipe for team protection; Orchid before he casts Nova' },
+  // Faceless Void
+  41: { defensive: ['ghost','force_staff','black_king_bar'],    offensive: ['orchid','sheepstick','blink'],
+        note: 'Ghost Scepter INSIDE Chronosphere makes you untargetable; Force Staff out before Chrono; Orchid after Chrono ends' },
+  // Wraith King
+  42: { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','desolator','blink'],
+        note: "Orchid during Reincarnation channel to deny revive; Heaven's Halberd disarms him; kill him twice fast in turbo" },
+  // Death Prophet
+  43: { defensive: ['black_king_bar','pipe','force_staff'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'Orchid silences Exorcism channel; BKB + Pipe survive her spirit barrage; Force Staff out of Silence range' },
+  // Phantom Assassin
+  44: { defensive: ['blade_mail','ghost','aeon_disk'],          offensive: ['monkey_king_bar','silver_edge','desolator'],
+        note: 'MKB true strike through Blur evasion; Silver Edge breaks evasion + Coup de Grace; Blade Mail during her burst' },
+  // Pugna
+  45: { defensive: ['ghost','force_staff','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Ghost Scepter avoids Decrepify amplification; Force Staff out of Nether Ward radius; Orchid interrupts Life Drain' },
+  // Templar Assassin
+  46: { defensive: ['sphere','force_staff','blade_mail'],       offensive: ['orchid','monkey_king_bar','blink'],
+        note: "Orchid silences so she can't use Psionic Traps; Linken's blocks Meld targeting; MKB for her evasion" },
+  // Viper
+  47: { defensive: ['black_king_bar','hood_of_defiance','eternal_shroud'], offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB purges Viper Strike slow; magic resist cuts his poison significantly; Orchid silences; Blink in to kill him' },
+  // Luna
+  48: { defensive: ['ghost','blade_mail','black_king_bar'],     offensive: ['blink','desolator','orchid'],
+        note: 'Ghost Scepter during Eclipse; Blade Mail returns Moon Glaive cleave damage; BKB blocks Eclipse stun' },
+  // Dragon Knight
+  49: { defensive: ['ghost','heavens_halberd','force_staff'],   offensive: ['orchid','blink','desolator'],
+        note: "Heaven's Halberd disarms him effectively; Ghost Scepter vs his melee Dragon Form; Orchid before Dragon Form activates" },
+  // Dazzle
+  50: { defensive: ['force_staff','ghost','glimmer_cape'],      offensive: ['nullifier','orchid','blink'],
+        note: 'Nullifier dispels Shallow Grave — save your burst for after Grave; Orchid prevents him from healing teammates' },
+  // Clockwerk
+  51: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff escapes Hookshot pin; Ghost Scepter vs Battery Assault; BKB resists his power cog disables' },
+  // Leshrac
+  52: { defensive: ['black_king_bar','pipe','hood_of_defiance'],offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB + Pipe + Hood stack vs his massive AOE magic damage; Orchid before Diabolic Edict; Blink out of Split Earth stun' },
+  // Nature's Prophet
+  53: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: "Orchid during Teleportation channel; Blink to close gap before he can escape; spread vs Sprout zones" },
+  // Lifestealer
+  54: { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','sheepstick','blink'],
+        note: "Ghost Scepter makes you untargetable while Infest is inside you; Heaven's Halberd disarms his right-click hard" },
+  // Dark Seer
+  55: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff out of Ion Shell; BKB during Wall of Replica; Orchid cancels Surge before it activates on him' },
+  // Clinkz
+  56: { defensive: ['glimmer_cape','ghost','force_staff'],      offensive: ['orchid','desolator','blink'],
+        note: 'Orchid cancels Skeleton Walk invis; Ghost Scepter blocks his burst combo; Glimmer Cape for invis counter-play' },
+  // Omniknight
+  57: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['nullifier','orchid','sheepstick'],
+        note: 'Nullifier dispels Guardian Angel armor buff; time magic damage for after Guardian Angel; Orchid silences heals' },
+  // Enchantress
+  58: { defensive: ['ghost','force_staff','glimmer_cape'],      offensive: ['orchid','blink','desolator'],
+        note: 'Orchid prevents enchanting your allies; Blink to close the ranged gap; Ghost Scepter vs Impetus damage burst' },
+  // Huskar
+  59: { defensive: ['blade_mail','ghost','black_king_bar'],     offensive: ['orchid','desolator','sheepstick'],
+        note: 'Blade Mail returns Burning Spear stack damage; Ghost Scepter vs his right-click burst; BKB blocks his disable' },
+  // Night Stalker
+  60: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','desolator'],
+        note: 'Force Staff out of Void; Ghost Scepter vs his night-time physical burst; Orchid silences Hunter in the Night' },
+  // Broodmother
+  61: { defensive: ['blade_mail','ghost','force_staff'],        offensive: ['orchid','desolator','maelstrom'],
+        note: 'Maelstrom chain lightning kills spiderlings instantly; Blade Mail returns spider damage; Orchid silences Web movement' },
+  // Bounty Hunter
+  62: { defensive: ['ghost','force_staff','glimmer_cape'],      offensive: ['orchid','blink','desolator'],
+        note: 'Orchid cancels Shadow Walk and prevents Track bonus gold; Ghost Scepter vs his burst; Glimmer for invis counter' },
+  // Weaver
+  63: { defensive: ['sphere','ghost','force_staff'],            offensive: ['orchid','desolator','blink'],
+        note: "Linken's blocks Shukuchi targeting; Orchid before Time Lapse so he can't escape; Ghost Scepter vs right-click burst" },
+  // Jakiro
+  64: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB resists Dual Breath slow; Force Staff out of Macropyre flame patch; Pipe for magic resist; Orchid interrupts ult' },
+  // Batrider
+  65: { defensive: ['black_king_bar','force_staff','aeon_disk'],offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB breaks Flaming Lasso instantly; Force Staff before he drags you away; Orchid cancels Flamebreak channel' },
+  // Chen
+  66: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: "Orchid silences Heal and Divine Favor; spread vs creep AOE; kill Chen's creeps first to remove his power" },
+  // Spectre
+  67: { defensive: ['ghost','force_staff','blade_mail'],        offensive: ['desolator','blink','sheepstick'],
+        note: "Ghost Scepter during Haunt illusions; Blade Mail returns Spectral Dagger damage; fight her before Radiance power spike" },
+  // Ancient Apparition
+  68: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff escapes Cold Feet; DO NOT use lifesteal when Ice Blast debuff is active — it prevents healing' },
+  // Doom
+  69: { defensive: ['sphere','black_king_bar','lotus_orb'],     offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's blocks Doom targeting; Lotus Orb reflects Doom back; BKB does NOT block Doom — use Linken's or Lotus Orb" },
+  // Ursa
+  70: { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','blink','desolator'],
+        note: "Ghost Scepter during Earthshock; Heaven's Halberd disarms his Fury Swipes; Blade Mail returns stacked Fury damage" },
+  // Spirit Breaker
+  71: { defensive: ['ghost','force_staff','aeon_disk'],         offensive: ['orchid','blink','sheepstick'],
+        note: 'Ghost Scepter after Charge impact; Force Staff before he reaches you; Aeon Disk saves from his bash-into-ult combo' },
+  // Gyrocopter
+  72: { defensive: ['force_staff','ghost','pipe'],              offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff out of Flak Cannon range; Pipe vs Call Down magic AOE; Orchid interrupts his Rocket Barrage' },
+  // Alchemist
+  73: { defensive: ['ghost','blade_mail','heavens_halberd'],    offensive: ['orchid','blink','desolator'],
+        note: "Ghost Scepter vs Acid Spray right-click amp; Heaven's Halberd disarms Chemical Rage; Orchid before Rage activates" },
+  // Invoker (as enemy to face)
+  74: { defensive: ['black_king_bar','force_staff','aeon_disk'],offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB resists his magic combos; Force Staff escapes Sun Strike; Orchid to silence between invocations; gap-close fast to disrupt him' },
+  // Silencer
+  75: { defensive: ['black_king_bar','force_staff','sphere'],   offensive: ['orchid','blink','sheepstick'],
+        note: "BKB breaks Global Silence; Linken's blocks Last Word targeting; Orchid silences him so he cannot silence you" },
+  // Outworld Destroyer
+  76: { defensive: ['sphere','black_king_bar','aeon_disk'],     offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's blocks Astral Imprisonment; BKB resists his int-drain and Sanity's Eclipse; Orchid during ult channel" },
+  // Lycan
+  77: { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','blink','desolator'],
+        note: "Heaven's Halberd disarms Wolf Form right-click; Ghost Scepter vs his physical burst; Orchid before Shapeshift" },
+  // Brewmaster
+  78: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff out of Primal Split tornado; Orchid silences before he splits; kill Fire brewling first for healing loss' },
+  // Shadow Demon
+  79: { defensive: ['sphere','aeon_disk','force_staff'],        offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's blocks Disruption; Aeon Disk saves from his illusion+spell combo; Orchid silences his ability chain" },
+  // Lone Druid
+  80: { defensive: ['ghost','blade_mail','black_king_bar'],     offensive: ['orchid','desolator','maelstrom'],
+        note: "Orchid silences the Spirit Bear; Blade Mail returns bear right-click; kill the bear early — it's his main power" },
+  // Chaos Knight
+  81: { defensive: ['ghost','blade_mail','black_king_bar'],     offensive: ['orchid','maelstrom','desolator'],
+        note: 'Maelstrom chain lightning hits ALL illusions simultaneously; Ghost Scepter during Chaos Strike crit; Orchid before Reality Rift' },
+  // Meepo
+  82: { defensive: ['ghost','blade_mail','force_staff'],        offensive: ['orchid','desolator','maelstrom'],
+        note: 'AOE damage kills all Meepos at once — use Maelstrom chain, AOE spells; killing one kills all if no Aghanim\'s' },
+  // Magnus
+  83: { defensive: ['force_staff','black_king_bar','pipe'],     offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff BEFORE Reverse Polarity lands; BKB breaks the stun; spread out to avoid RP; Orchid during channel' },
+  // Centaur Warrunner
+  84: { defensive: ['ghost','force_staff','blade_mail'],        offensive: ['orchid','blink','sheepstick'],
+        note: "Ghost Scepter vs Hoof Stomp + right-click; Force Staff out of Stampede path; Blade Mail returns Double Edge damage" },
+  // Slark
+  85: { defensive: ['ghost','force_staff','blade_mail'],        offensive: ['orchid','desolator','blink'],
+        note: "Ghost Scepter breaks Dark Pact purge immunity window; Force Staff out of Pounce; Orchid so he can't Dark Pact" },
+  // Rubick
+  86: { defensive: ['sphere','force_staff','black_king_bar'],   offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's prevents him stealing your ultimate; Force Staff out of Telekinesis; Orchid silences before he can steal your ult" },
+  // Disruptor
+  87: { defensive: ['force_staff','black_king_bar','sphere'],   offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff escapes Kinetic Field walls; BKB breaks Static Storm silence; Orchid silences before Glimpse cast' },
+  // Nyx Assassin
+  88: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','desolator'],
+        note: 'BKB blocks Spiked Carapace reflection; spread to reduce Impale range; Orchid cancels Vendetta invis' },
+  // Naga Siren
+  89: { defensive: ['force_staff','black_king_bar','sphere'],   offensive: ['orchid','desolator','maelstrom'],
+        note: 'BKB breaks Song of the Siren; Maelstrom hits all Naga illusions; Orchid silences Ensnare; Force Staff out of nets' },
+  // Keeper of the Light
+  90: { defensive: ['sphere','force_staff','black_king_bar'],   offensive: ['orchid','blink','sheepstick'],
+        note: "Linken's blocks Illuminate targeting; BKB vs Blinding Light stun; Orchid during Illuminate channel; Blink in fast" },
+  // Io
+  91: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Orchid during Relocate cast to silence him; Force Staff breaks Tether bond range; kill Io first every fight' },
+  // Visage
+  92: { defensive: ['force_staff','ghost','black_king_bar'],    offensive: ['orchid','desolator','blink'],
+        note: 'Force Staff escapes Soul Assumption burst; kill Familiars immediately — they deal massive burst damage' },
+  // Slark... skip 93 (uncertain ID)
+  // Medusa
+  94: { defensive: ['ghost','orchid','force_staff'],            offensive: ['orchid','blink','desolator'],
+        note: 'Burst her fast before Stone Gaze activates; Orchid before Mystic Snake restores her mana; MKB for right-click' },
+  // Troll Warlord
+  95: { defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','blink','desolator'],
+        note: "Ghost Scepter during Battle Trance; Heaven's Halberd disarms him during Trance; Orchid before he ults" },
+  // Ogre Magi
+  96: { defensive: ['black_king_bar','aeon_disk','force_staff'],offensive: ['orchid','blink','sheepstick'],
+        note: 'BKB blocks Multicast Fireblast stuns; Aeon Disk saves from multi-cast burst; Force Staff out of melee range' },
+  // Undying
+  97: { defensive: ['ghost','force_staff','black_king_bar'],    offensive: ['orchid','blink','sheepstick'],
+        note: 'Force Staff out of Tombstone zombie range; destroy Tombstone quickly — it heals Undying; Ghost Scepter vs Flesh Golem' },
+  // Legion Commander
+  104:{ defensive: ['ghost','heavens_halberd','blade_mail'],    offensive: ['orchid','blink','desolator'],
+        note: "Ghost Scepter during Duel makes you untargetable; Heaven's Halberd disarms before Duel; Orchid silences her chase" },
 };
 
 // =============================================
@@ -366,6 +726,49 @@ function filterByAttr(items, attrMap) {
 function filterOffensiveByAttr(items) { return filterByAttr(items, ATTR_OFFENSIVE); }
 function filterDefensiveByAttr(items) { return filterByAttr(items, ATTR_DEFENSIVE); }
 
+function getHeroArchetype(hero) {
+  if (!hero) return 'universal';
+  const attr  = hero.primary_attr;
+  const roles = new Set(hero.roles || []);
+  if (attr === 'all_attr') return 'universal';
+  if (attr === 'agi') {
+    if (roles.has('Carry'))   return 'agi_carry';
+    if (roles.has('Support')) return 'agi_support';
+    return 'agi_utility';
+  }
+  if (attr === 'int') {
+    if (roles.has('Support') && !roles.has('Carry')) return 'int_support';
+    return 'int_nuker';
+  }
+  if (attr === 'str') {
+    if (roles.has('Carry'))                            return 'str_carry';
+    if (roles.has('Support'))                          return 'str_support';
+    if (roles.has('Initiator') || roles.has('Disabler')) return 'str_initiator';
+    if (roles.has('Durable'))                          return 'str_tank';
+    return 'str_initiator';
+  }
+  return 'universal';
+}
+
+function getMyHeroBuild(heroId) {
+  const hero     = state.heroesMap[heroId];
+  const specific = MY_HERO_SPECIFIC[heroId];
+  if (specific) {
+    return {
+      defensive: specific.defensive.map(key => ({ key, ...ITEMS[key] })).filter(i => i.name),
+      offensive: specific.offensive.map(key => ({ key, ...ITEMS[key] })).filter(i => i.name),
+      note: specific.note || null,
+    };
+  }
+  const archetype = getHeroArchetype(hero);
+  const build     = HERO_ARCHETYPES[archetype] || HERO_ARCHETYPES.universal;
+  return {
+    defensive: build.defensive.map(key => ({ key, ...ITEMS[key] })).filter(i => i.name),
+    offensive: build.offensive.map(key => ({ key, ...ITEMS[key] })).filter(i => i.name),
+    note: build.note || null,
+  };
+}
+
 // =============================================
 // ITEM RECOMMENDATIONS
 // Returns { defensive: [...], offensive: [...] }
@@ -392,18 +795,20 @@ function topFromScores(scores, limit = 6) {
 }
 
 function computeTeamItems() {
-  if (state.direTeam.length === 0) return { defensive: [], offensive: [] };
+  // If MY hero is selected, show their recommended build (not enemy-role scoring)
+  if (state.radiantTeam.length > 0) {
+    return getMyHeroBuild(state.radiantTeam[0].id);
+  }
+  // No hero picked yet — fall back to enemy-role scoring
+  if (state.direTeam.length === 0) return { defensive: [], offensive: [], note: null };
   const defScores = scoreItems(DEF_ROLE_ITEMS, state.direTeam);
   const offScores = scoreItems(OFF_ROLE_ITEMS, state.direTeam);
-  // Melee enemy bonus
   for (const e of state.direTeam) {
-    if (e.attack_type === 'Melee') {
-      defScores['hurricane_pike'] = (defScores['hurricane_pike'] || 0) + 4;
-    }
+    if (e.attack_type === 'Melee') defScores['hurricane_pike'] = (defScores['hurricane_pike'] || 0) + 4;
   }
   const defensive = filterDefensiveByAttr(topFromScores(defScores, 20)).slice(0, 6);
   const offensive = filterOffensiveByAttr(topFromScores(offScores, 20)).slice(0, 6);
-  return { defensive, offensive };
+  return { defensive, offensive, note: null };
 }
 
 function computeHeroItems(heroId) {
@@ -570,14 +975,22 @@ function displayCounters(counters) {
 
 function renderItems() {
   const el = document.getElementById('items-content');
-  if (state.direTeam.length === 0) {
-    el.innerHTML = `<p class="placeholder-text">Add heroes to the enemy team to see item recommendations</p>`;
+  const myHero = state.radiantTeam[0];
+  if (!myHero && state.direTeam.length === 0) {
+    el.innerHTML = `<p class="placeholder-text">Pick your hero first to see item recommendations</p>`;
+    return;
+  }
+  if (!myHero) {
+    el.innerHTML = `<p class="placeholder-text">Pick your hero to see a build recommendation</p>`;
     return;
   }
 
   if (state.activeItemTab === 'team') {
-    const { defensive, offensive } = computeTeamItems();
-    el.innerHTML = renderItemSections(defensive, offensive, 'vs Enemy Team');
+    const { defensive, offensive, note } = computeTeamItems();
+    const myHero  = state.radiantTeam[0];
+    const label   = myHero ? `${myHero.localized_name} build` : 'vs Enemy Team';
+    const noteHtml = note ? `<div class="hero-note">${note}</div>` : '';
+    el.innerHTML = noteHtml + renderItemSections(defensive, offensive, label);
 
   } else {
     const chipHtml = buildChipHtml();
