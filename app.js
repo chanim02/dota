@@ -436,6 +436,7 @@ function handleHeroClick(hero) {
   if (state.pickingFor === 'radiant') {
     if (state.radiantTeam.length >= 1) return;
     state.radiantTeam.push(hero);
+    setPickingFor('dire');
   } else {
     if (state.direTeam.length >= 5) return;
     state.direTeam.push(hero);
