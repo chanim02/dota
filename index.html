@@ -90,5 +90,142 @@
 </div>
 
 <script src="app.js"></script>
+
+<!-- ====================================================== -->
+<!-- GOOFY GALLERY — for fuck and fun only                  -->
+<!-- ====================================================== -->
+<style>
+  .goof {
+    position: fixed; z-index: 9999; cursor: pointer; user-select: none;
+    transition: transform 0.15s ease;
+  }
+  .goof img {
+    display: block; border-radius: 8px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.85);
+  }
+  .goof:hover img { filter: brightness(1.15); }
+  .goof-caption {
+    font-family: 'Arial Black', Arial, sans-serif; font-size: 10px; font-weight: 900;
+    color: #fff; background: rgba(0,0,0,0.82); padding: 2px 7px;
+    border-radius: 0 0 6px 6px; text-align: center; white-space: nowrap;
+  }
+  .goof.dismissed {
+    transition: transform 1s ease, opacity 0.8s ease !important;
+    opacity: 0 !important; pointer-events: none;
+  }
+
+  @keyframes goof-float   { 0%,100%{transform:translateY(0)        } 50%{transform:translateY(-14px)      } }
+  @keyframes goof-wobble  { 0%,100%{transform:rotate(-5deg)        } 50%{transform:rotate(5deg)           } }
+  @keyframes goof-sway    { 0%,100%{transform:rotate(-10deg)       } 50%{transform:rotate(10deg)          } }
+  @keyframes goof-bounce  { 0%,100%{transform:rotate(6deg) translateY(0)} 50%{transform:rotate(6deg) translateY(-16px)} }
+
+  /* okaybuddy: peeks down from the top */
+  @keyframes goof-peek-top {
+    0%,100%  { transform: translateX(-50%) translateY(-78%); }
+    20%,50%  { transform: translateX(-50%) translateY(0);    }
+  }
+  /* weird flex: slides in from right edge */
+  @keyframes goof-peek-right {
+    0%,100%  { transform: translateX(calc(100% - 50px)); }
+    25%,55%  { transform: translateX(0);                 }
+  }
+</style>
+
+<!-- 1. okaybuddy — titter ned fra toppen -->
+<div class="goof" style="top:0; left:50%; animation: goof-peek-top 9s ease-in-out 1s infinite;">
+  <img src="okaybuddy.jpg" width="110" style="border-radius:0 0 8px 8px;">
+  <div class="goof-caption">👀</div>
+</div>
+
+<!-- 2. baby iced out — floater nede til høyre -->
+<div class="goof" style="bottom:18px; right:18px; animation: goof-float 3.2s ease-in-out infinite;">
+  <img src="baby.png" width="95" style="border-radius:50%;">
+  <div class="goof-caption">💎 turbo baby 💎</div>
+</div>
+
+<!-- 3. weird flex — kiker inn fra høyre -->
+<div class="goof" style="right:0; top:38%; animation: goof-peek-right 11s ease-in-out 0.5s infinite;">
+  <img src="weird flex.jpg" width="85" style="border-radius:8px 0 0 8px;">
+  <div class="goof-caption">weird flex but ok</div>
+</div>
+
+<!-- 4. militærgutta i mørket — nede til venstre, wobble -->
+<div class="goof" style="bottom:16px; left:16px; animation: goof-wobble 4s ease-in-out infinite;">
+  <img src="IMG_5137.jpg" width="88" style="transform:rotate(-4deg);">
+  <div class="goof-caption">ranked at 3am 🚬</div>
+</div>
+
+<!-- 5. tape-nose duckface — venstre midt, floater -->
+<div class="goof" style="left:8px; top:42%; animation: goof-float 4.8s ease-in-out 1.2s infinite;">
+  <img src="IMG_5138.jpg" width="78" style="transform:rotate(10deg);">
+  <div class="goof-caption">when u lose lane 😔</div>
+</div>
+
+<!-- 6. 17 mai kokk — midt-venstre, sway -->
+<div class="goof" style="left:105px; top:62%; animation: goof-sway 5.5s ease-in-out infinite;">
+  <img src="IMG_5159.png" width="72" style="transform:rotate(-8deg);">
+  <div class="goof-caption">God 17 mai 🇳🇴</div>
+</div>
+
+<!-- 7. kjøkkenduo rock sign — høyre midt, bounce -->
+<div class="goof" style="right:14px; top:52%; animation: goof-bounce 3.8s ease-in-out 0.8s infinite;">
+  <img src="IMG_5163.png" width="82" style="transform:rotate(5deg);">
+  <div class="goof-caption">the cook duo 🤘</div>
+</div>
+
+<!-- 8. head pat etter barbering — øverst til venstre, wobble -->
+<div class="goof" style="left:14px; top:12%; animation: goof-wobble 6.5s ease-in-out 2s infinite;">
+  <img src="7DF1100F-EF4C-4E05-95FF-826324F8572D.jpg" width="78" style="transform:rotate(-6deg);">
+  <div class="goof-caption">it's ok bro 🤝</div>
+</div>
+
+<!-- 9. Sandra musikkbingo — høyre nede, float -->
+<div class="goof" style="right:14px; top:76%; animation: goof-float 5.2s ease-in-out 0.3s infinite;">
+  <img src="sandra.jpg" width="82" style="transform:rotate(-4deg);">
+  <div class="goof-caption">B9 musikkbingo 🎵</div>
+</div>
+
+<!-- 10. telefon med unger — venstre nede, sway -->
+<div class="goof" style="left:8px; top:72%; animation: goof-sway 7s ease-in-out 1.5s infinite;">
+  <img src="IMG_5135.jpg" width="68" style="transform:rotate(8deg);">
+  <div class="goof-caption">hahahahha 💀</div>
+</div>
+
+<!-- 11. Jamie's restaurant — høyre øverst, float -->
+<div class="goof" style="right:110px; top:16%; animation: goof-float 4.3s ease-in-out 3s infinite;">
+  <img src="IMG_5139.jpg" width="78" style="transform:rotate(-9deg);">
+  <div class="goof-caption">Jamie's 🍔</div>
+</div>
+
+<!-- 12. kjøkkentrioen smiler — øverst til høyre, wobble -->
+<div class="goof" style="right:14px; top:8%; animation: goof-wobble 5.8s ease-in-out 1s infinite;">
+  <img src="Screenshot_2025-09-10_033105.png" width="88">
+  <div class="goof-caption">the gang 👨‍🍳</div>
+</div>
+
+<!-- 13. natt-selfie utenfor butikk — midt-venstre, bounce -->
+<div class="goof" style="left:110px; top:55%; animation: goof-bounce 4.2s ease-in-out 2.5s infinite;">
+  <img src="IMG_5136.jpg" width="72" style="transform:rotate(-6deg);">
+  <div class="goof-caption">found him 🔍</div>
+</div>
+
+<script>
+  // Klikk på et bilde → det flyr bort
+  document.querySelectorAll('.goof').forEach(el => {
+    el.addEventListener('click', () => {
+      const directions = [
+        'translateY(-120vh)', 'translateY(120vh)',
+        'translateX(-120vw)', 'translateX(120vw)',
+        'translateX(120vw) translateY(-120vh)',
+        'translateX(-120vw) translateY(120vh)',
+      ];
+      const dir = directions[Math.floor(Math.random() * directions.length)];
+      el.style.transition = 'transform 0.6s cubic-bezier(0.4,0,1,1), opacity 0.5s';
+      el.style.transform = dir;
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 700);
+    });
+  });
+</script>
 </body>
 </html>
