@@ -53,6 +53,32 @@ const ITEMS = {
   radiance:        { name: 'Radiance',             img: 'radiance',          reason: '5150g — burn + miss chance, too farm-dependent for turbo',            priority: 1 },
 };
 
+// ---- Items only suitable for INT/spell heroes ----
+// (added to ITEMS DB inline below the main block — added here as new entries)
+Object.assign(ITEMS, {
+  veil_of_discord: { name: 'Veil of Discord',   img: 'veil_of_discord',   reason: '1475g — reduces enemy magic resistance, multiplies all your spells',      priority: 3 },
+  phylactery:      { name: 'Phylactery',         img: 'phylactery',        reason: '2000g — adds a slow burst on your next spell, cheap spell amp for nukers', priority: 3 },
+  rod_of_atos:     { name: 'Rod of Atos',        img: 'rod_of_atos',       reason: '2750g — roots a target for 2s, great setup for your follow-up spells',    priority: 2 },
+  aghanims_scepter:{ name: "Aghanim's Scepter",  img: 'aghanims_scepter',  reason: '4200g — upgrades your ultimate, usually core on most int casters',        priority: 3 },
+  kaya:            { name: 'Kaya',               img: 'kaya',              reason: '2050g — pure spell amp + mana cost reduction, cheap core for nukers',       priority: 3 },
+  gleipnir:        { name: 'Gleipnir',           img: 'gleipnir',          reason: '4350g — AOE root for 1.6s, great teamfight setup for casters',             priority: 2 },
+  octarine_core:   { name: 'Octarine Core',      img: 'octarine_core',     reason: '5900g — spell amp + lifesteal + CDR, strong if game goes long in turbo',   priority: 1 },
+  refresher:       { name: 'Refresher Orb',      img: 'refresher',         reason: '5000g — double your ultimate, game-changing on Zeus/Enigma/etc.',          priority: 1 },
+  witch_blade:     { name: 'Witch Blade',        img: 'witch_blade',       reason: '2800g — int-to-attack conversion, good on int heroes who want right-click',priority: 2 },
+});
+
+// ---- Which offensive items are valid per hero attribute ----
+const ATTR_OFFENSIVE = {
+  int: ['blink','veil_of_discord','phylactery','kaya','rod_of_atos','aghanims_scepter','orchid',
+        'gleipnir','ethereal_blade','sheepstick','nullifier','witch_blade','octarine_core','refresher','shadow_blade'],
+  agi: ['maelstrom','desolator','monkey_king_bar','diffusal_blade','silver_edge','manta','abyssal_blade',
+        'daedalus','skadi','mjollnir','blink','orchid','bloodthorn','nullifier','shadow_blade'],
+  str: ['blink','desolator','abyssal_blade','silver_edge','orchid','sheepstick','skadi','nullifier',
+        'maelstrom','shadow_blade','diffusal_blade'],
+  all_attr: ['blink','desolator','maelstrom','orchid','silver_edge','monkey_king_bar','diffusal_blade',
+             'sheepstick','ethereal_blade','manta','nullifier','shadow_blade','veil_of_discord'],
+};
+
 // ---- DEFENSIVE items per role (cheap first = higher score in turbo) ----
 const DEF_ROLE_ITEMS = {
   Disabler:  ['blade_mail', 'force_staff', 'glimmer_cape', 'black_king_bar', 'cyclone', 'lotus_orb', 'sphere'],
@@ -160,6 +186,18 @@ function isInAnyTeam(heroId) {
   return state.radiantTeam.some(h => h.id === heroId) || state.direTeam.some(h => h.id === heroId);
 }
 
+function getMyHeroAttr() {
+  if (state.radiantTeam.length === 0) return null;
+  return state.radiantTeam[0].primary_attr; // 'str', 'agi', 'int', 'all_attr'
+}
+
+function filterOffensiveByAttr(items) {
+  const attr = getMyHeroAttr();
+  if (!attr) return items;
+  const allowed = new Set(ATTR_OFFENSIVE[attr] || []);
+  return items.filter(item => allowed.has(item.key));
+}
+
 // =============================================
 // ITEM RECOMMENDATIONS
 // Returns { defensive: [...], offensive: [...] }
@@ -195,7 +233,9 @@ function computeTeamItems() {
       defScores['hurricane_pike'] = (defScores['hurricane_pike'] || 0) + 4;
     }
   }
-  return { defensive: topFromScores(defScores, 6), offensive: topFromScores(offScores, 6) };
+  const offAll = topFromScores(offScores, 20);
+  const offensive = filterOffensiveByAttr(offAll).slice(0, 6);
+  return { defensive: topFromScores(defScores, 6), offensive };
 }
 
 function computeHeroItems(heroId) {
@@ -218,7 +258,9 @@ function computeHeroItems(heroId) {
   const offScores = scoreItems(OFF_ROLE_ITEMS, enemies);
   if (hero.attack_type === 'Melee') defScores['hurricane_pike'] = (defScores['hurricane_pike'] || 0) + 4;
 
-  return { defensive: topFromScores(defScores, 5), offensive: topFromScores(offScores, 5) };
+  const offAll = topFromScores(offScores, 15);
+  const offensive = filterOffensiveByAttr(offAll).slice(0, 5);
+  return { defensive: topFromScores(defScores, 5), offensive };
 }
 
 // =============================================
